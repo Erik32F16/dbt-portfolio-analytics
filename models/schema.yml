@@ -51,7 +51,7 @@ models:
           - not_null
 
   - name: stg_clients
-    description: "Clients typed and deduplicated by business identifier, excluding null identifiers, cities, states, and invalid creation dates."
+    description: "Clients typed and deduplicated by business identifier, with uppercase state abbreviations, excluding null identifiers, names, cities, invalid states, and invalid creation dates."
     columns:
       - name: client_id
         description: "Business identifier of the client in the source data."
@@ -59,14 +59,19 @@ models:
           - not_null
       - name: name
         description: "Client's full name."
+        data_tests:
+          - not_null
       - name: city
         description: "Client's city; may be null in the source data."
         data_tests:
           - not_null
       - name: state
-        description: "Client's Brazilian state abbreviation."
+        description: "Valid uppercase Brazilian federative unit abbreviation, including DF."
         data_tests:
           - not_null
+          - accepted_values:
+              arguments:
+                values: ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
       - name: created_at
         description: "Date on which the client was registered."
         data_tests:
@@ -85,6 +90,11 @@ models:
         description: "Client's city; may be null in the source data."
       - name: state
         description: "Client's Brazilian state abbreviation."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
       - name: created_at
         description: "Date on which the client was registered."
 

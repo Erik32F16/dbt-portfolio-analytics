@@ -51,7 +51,7 @@ Os testes genéricos atuais verificam campos obrigatórios, unicidade, operaçõ
 
 O mart exclui combinações de cliente e ativo com quantidade líquida negativa, usando `HAVING net_quantity >= 0`. As transações correspondentes permanecem na fato, mas essas combinações não aparecem na carteira final.
 
-O teste singular `tests/assert_no_negative_position.sql` verifica se o mart contém alguma carteira com `net_quantity < 0`. Como essas posições são excluídas pelo modelo, o teste deve passar. Com os dados fornecidos, os 20 testes devem passar e o comando `dbt test` deve terminar com código de saída zero.
+O teste singular `tests/assert_no_negative_position.sql` verifica se o mart contém alguma carteira com `net_quantity < 0`. Como essas posições são excluídas pelo modelo, o teste deve passar. Com os dados fornecidos, todos os testes devem passar e o comando `dbt test` deve terminar com código de saída zero.
 
 ## Estrutura dos modelos
 
@@ -79,7 +79,7 @@ tests/
 
 | Modelo | Responsabilidade |
 | --- | --- |
-| `stg_clients` | Converte os tipos, exclui clientes com identificador, cidade ou estado nulos ou data de cadastro inválida e deduplica por identificador. |
+| `stg_clients` | Converte os tipos, normaliza as UFs para maiúsculas, exclui clientes com identificador, nome ou cidade nulos, UF fora da lista válida ou data de cadastro inválida e deduplica por identificador. |
 | `stg_transactions` | Converte os tipos, filtra registros inválidos e deduplica transações. |
 | `dim_clients` | Mantém a dimensão de clientes com chave substituta numérica `id` e atualização incremental por `merge`. |
 | `int_transactions` | Associa as transações à dimensão; seu `client_id` passa a conter `dim_clients.id`. |
