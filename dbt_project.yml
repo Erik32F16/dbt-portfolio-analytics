@@ -1,0 +1,12 @@
+name: clube_do_valor
+version: "1.0.0"
+config-version: 2
+
+profile: clube
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+
+models:
+  demo:
+    +materialized: table

@@ -1,0 +1,147 @@
+version: 2
+
+models:
+  - name: stg_transactions
+    description: "Cleaned, validated, and deduplicated transactions."
+
+    columns:
+      - name: transaction_id
+        description: "Unique business identifier of the transaction."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: client_id
+        description: "Business identifier of the client supplied by the transaction."
+        data_tests:
+          - not_null
+
+      - name: asset_ticker
+        description: "Ticker of the traded asset."
+        data_tests:
+          - not_null
+
+      - name: operation
+        description: "Transaction direction: BUY or SELL."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['BUY', 'SELL']
+
+      - name: quantity
+        description: "Non-negative quantity of asset units traded."
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+
+      - name: unit_price
+        description: "Non-negative financial price per asset unit."
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+
+      - name: transaction_date
+        description: "Date on which the transaction occurred."
+        data_tests:
+          - not_null
+
+  - name: stg_clients
+    description: "Clients typed and deduplicated by business identifier, excluding null identifiers, cities, states, and invalid creation dates."
+    columns:
+      - name: client_id
+        description: "Business identifier of the client in the source data."
+        data_tests:
+          - not_null
+      - name: name
+        description: "Client's full name."
+      - name: city
+        description: "Client's city; may be null in the source data."
+        data_tests:
+          - not_null
+      - name: state
+        description: "Client's Brazilian state abbreviation."
+        data_tests:
+          - not_null
+      - name: created_at
+        description: "Date on which the client was registered."
+        data_tests:
+          - not_null
+
+  - name: dim_clients
+    description: "Client dimension merged by business client_id, preserving surrogate keys during incremental updates."
+    columns:
+      - name: id
+        description: "Sequence-generated client surrogate key, preserved for matched rows during incremental merges."
+      - name: client_id
+        description: "Business identifier used to match clients during merges."
+      - name: name
+        description: "Client's full name."
+      - name: city
+        description: "Client's city; may be null in the source data."
+      - name: state
+        description: "Client's Brazilian state abbreviation."
+      - name: created_at
+        description: "Date on which the client was registered."
+
+  - name: int_transactions
+    description: "Staged transactions joined to the client dimension, replacing the business client identifier with dim_clients.id. Unmatched clients retain a null client_id."
+    columns:
+      - name: transaction_id
+        description: "Unique business identifier of the transaction."
+      - name: client_id
+        description: "Client surrogate key referencing dim_clients.id; null when no matching client exists."
+      - name: asset_ticker
+        description: "Ticker of the traded asset."
+      - name: operation
+        description: "Transaction direction: BUY or SELL."
+      - name: quantity
+        description: "Quantity of asset units traded."
+      - name: unit_price
+        description: "Financial price per asset unit."
+      - name: transaction_date
+        description: "Date on which the transaction occurred."
+
+  - name: fact_transactions
+    description: "Incremental transaction fact merged by transaction_id. Reprocesses the latest loaded transaction date and newer dates; older arrivals and corrections require a full refresh."
+    columns:
+      - name: id
+        description: "Sequence-generated transaction surrogate key, preserved for matched rows during incremental merges."
+        data_tests:
+          - not_null
+          - unique
+      - name: transaction_id
+        description: "Unique business identifier used to match transactions during merges."
+        data_tests:
+          - not_null
+          - unique
+      - name: client_id
+        description: "Client surrogate key referencing dim_clients.id; null when no matching client exists."
+      - name: asset_ticker
+        description: "Ticker of the traded asset."
+      - name: operation
+        description: "Transaction direction: BUY or SELL."
+      - name: quantity
+        description: "Quantity of asset units traded."
+      - name: unit_price
+        description: "Financial price per asset unit."
+      - name: transaction_date
+        description: "Transaction date used as the incremental watermark, including its boundary date."
+
+  - name: mart_client_portfolio
+    description: "Net quantity and financial transaction balances per client and asset, including negative balances. Only transactions matched to the client dimension are included."
+    columns:
+      - name: client_id
+        description: "Client surrogate key referencing dim_clients.id."
+      - name: name
+        description: "Client's full name from the client dimension."
+      - name: asset_ticker
+        description: "Ticker of the asset held or traded by the client."
+      - name: net_quantity
+        description: "Total units bought minus total units sold for this client and asset."
+      - name: position
+        description: "Purchase quantity times unit price minus sale quantity times unit price, summed for this client and asset; a net transaction value rather than a current market valuation."

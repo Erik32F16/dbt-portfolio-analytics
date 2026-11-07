@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# dbt generated files and local user settings
+/target/
+/logs/
+/dbt_packages/
+/.user.yml
+
+# Local DuckDB databases
+*.duckdb
+*.duckdb.wal
+*.duckdb.tmp/
+
+# Local environment variables
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Assignment brief
+/Teste Técnico_Engenheiro-Dados-CDV.html

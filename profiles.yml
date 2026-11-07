@@ -1,0 +1,7 @@
+clube:
+  target: prod
+  outputs:
+    prod:
+      type: duckdb
+      path: clube.duckdb
+      threads: 4
