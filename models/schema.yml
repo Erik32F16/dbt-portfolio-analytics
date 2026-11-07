@@ -117,7 +117,7 @@ models:
         description: "Date on which the transaction occurred."
 
   - name: fact_transactions
-    description: "Incremental transaction fact merged by transaction_id. Reprocesses the latest loaded transaction date and newer dates; older arrivals and corrections require a full refresh."
+    description: "Incremental transaction fact merged by transaction_id, processing all intermediate transactions on each run regardless of transaction date."
     columns:
       - name: id
         description: "Sequence-generated transaction surrogate key, preserved for matched rows during incremental merges."
@@ -140,7 +140,7 @@ models:
       - name: unit_price
         description: "Financial price per asset unit."
       - name: transaction_date
-        description: "Transaction date used as the incremental watermark, including its boundary date."
+        description: "Date on which the transaction occurred; does not restrict incremental processing."
 
   - name: mart_client_portfolio
     description: "Net quantity and financial transaction balances per client and asset, including negative balances. Only transactions matched to the client dimension are included."

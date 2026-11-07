@@ -72,7 +72,6 @@ models/
   schema.yml
 macros/
   deduplicate.sql
-  bookmark.sql
 tests/
   assert_no_negative_position.sql
 ```
@@ -101,13 +100,13 @@ Após a agregação, o mart mantém somente combinações com `net_quantity >= 0
 
 ### Carga incremental e macros
 
-`dim_clients` faz `merge` por identificador de negócio. `fact_transactions` faz `merge` por `transaction_id`, processando transações cuja `transaction_date` seja maior ou igual à maior data já carregada. A inclusão da data limite permite reprocessar operações desse dia sem duplicar transações.
+`dim_clients` faz `merge` por identificador de negócio. `fact_transactions` processa todas as transações do modelo intermediário a cada execução e faz `merge` por `transaction_id`, atualizando registros existentes e inserindo novos sem duplicar esse identificador. Não há filtro por data; transações atrasadas e correções de datas anteriores também são processadas.
 
 As chaves substitutas são geradas por sequências e preservadas nas atualizações incrementais. Registros novos podem receber identificadores com intervalos entre os valores.
 
-A macro `deduplicate` é compartilhada pelos modelos de staging. A macro `bookmark` obtém a maior data carregada na fato, com uma data padrão quando necessário.
+A macro `deduplicate` é compartilhada pelos modelos de staging.
 
-Transações atrasadas ou corrigidas com data anterior ao limite incremental exigem reconstrução completa. Após mudanças no significado ou no tipo das chaves, reconstrua todos os modelos para manter os relacionamentos consistentes:
+Após mudanças no significado ou no tipo das chaves, reconstrua todos os modelos para manter os relacionamentos consistentes:
 
 ```sh
 dbt run --full-refresh

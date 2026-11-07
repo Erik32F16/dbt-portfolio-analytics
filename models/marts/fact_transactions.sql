@@ -18,6 +18,3 @@ SELECT
     unit_price,
     transaction_date
 FROM {{ ref('int_transactions') }}
-{% if is_incremental() %}
-WHERE transaction_date >= {{ bookmark('transaction_date', this) }}
-{% endif %}
